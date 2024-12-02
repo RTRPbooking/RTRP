@@ -159,7 +159,7 @@
 
     <div id="cards-container">
         <div class="cards-wrapper" id="cards-wrapper">
-            <div class="row" id="top-row"></div> <!-- 上排三張卡片 -->
+            <div class="row" id="top-row"></div> <!-- 上排四張卡片 -->
             <div class="row" id="bottom-row"></div> <!-- 下排三張卡片 -->
         </div>
     </div>
@@ -170,13 +170,15 @@
         你的瀏覽器不支持音頻元素。
     </audio>
     <script>
-      var audio = document.getElementById("background-music");
-      audio.volume = 0.2;
+        var audio = document.getElementById("background-music");
+        audio.volume = 0.5;
     </script>
     <script>
-        const cards = ["1", "2", "3", "4", "5", "6","7"]; // 定義卡片數字，現在有六張卡片
+        const cards = ["1", "2", "3", "4", "5", "6", "7"]; // 定義卡片數字，現在有七張卡片
         let cardFlipped = false; // 是否已翻開卡片
         let rectangleAdded = false; // 标记是否已添加绿色长方形
+        let selectedCard = null; // 用來記錄玩家選中的卡片
+        let allCardsFlipped = false; // 用來判斷是否已經翻開其他卡片
         const backgroundMusic = document.getElementById('background-music'); // 音樂播放器元素
 
         // 洗牌函數
@@ -255,24 +257,31 @@
                     frontFaceContent = '<img src="https://raw.githubusercontent.com/RTRPbooking/RTRP/refs/heads/main/7.png" alt="Image 7" style="width: 100%; height: 100%; object-fit: cover;" />';
                 }
 
-                cardDiv.innerHTML =  
-                    `<div class="inner">
-                        <div class="face front">${frontFaceContent}</div>
-                        <div class="face back"></div>
-                    </div>`;
-                
-                cardDiv.onclick = () => flipCard(cardDiv); // 點擊翻牌
+                // 創建卡片的正面和背面
+                const innerDiv = document.createElement('div');
+                innerDiv.className = 'inner';
 
-                // 分配卡片到上排或下排
-                if (index < 4) {
-                    topRow.appendChild(cardDiv);  // 上排三張
-                } else {
-                    bottomRow.appendChild(cardDiv);  // 下排三張
+                const frontFace = document.createElement('div');
+                frontFace.className = 'face front';
+                frontFace.innerHTML = frontFaceContent;
+
+                const backFace = document.createElement('div');
+                backFace.className = 'face back';
+
+                innerDiv.appendChild(frontFace);
+                innerDiv.appendChild(backFace);
+                cardDiv.appendChild(innerDiv);
+
+                // 註冊點擊事件
+                cardDiv.addEventListener('click', () => flipCard(cardDiv));
+
+                // 按照位置加入行
+                if (index < 4) {  // 前四張卡片到上排
+                    topRow.appendChild(cardDiv);
+                } else {  // 其餘三張卡片到下排
+                    bottomRow.appendChild(cardDiv);
                 }
             });
-
-            cardFlipped = false;
-            rectangleAdded = false; // 每次初始化时清空标记
         }
 
         // 翻開卡片的函數
@@ -281,6 +290,11 @@
 
             cardDiv.classList.toggle('flipped'); // 翻開卡片
             cardFlipped = true;
+
+            // 記錄玩家選中的卡片
+            if (!selectedCard) {
+                selectedCard = cardDiv;
+            }
 
             // 在翻開的卡片上方添加绿色小长方形
             if (!rectangleAdded) {
@@ -291,17 +305,20 @@
                 rectangleAdded = true; // 确保只添加一次
             }
 
-            // 延遲翻開其餘卡片
+            // 延遲2秒後翻開其他卡片
             setTimeout(() => {
-                const allCards = document.querySelectorAll('.card');
-                allCards.forEach(card => {
-                    if (!card.classList.contains('flipped') && card !== cardDiv) {
-                        card.classList.add('flipped');
-                    }
-                });
-            }, 2000); // 延遲2秒後翻開
-                
-                            // 延遲6秒後隱藏其他卡片，只保留選中的卡片
+                if (!allCardsFlipped) {
+                    const allCards = document.querySelectorAll('.card');
+                    allCards.forEach(card => {
+                        if (!card.classList.contains('flipped') && card !== selectedCard) {
+                            card.classList.add('flipped'); // 翻開未選中的卡片
+                        }
+                    });
+                    allCardsFlipped = true; // 确保翻开其他卡片只执行一次
+                }
+            }, 2000); // 延迟2秒后翻开其他卡片
+
+            // 延遲6秒後隱藏其他卡片，只保留選中的卡片
             setTimeout(() => {
                 const allCards = document.querySelectorAll('.card');
                 allCards.forEach(card => {
